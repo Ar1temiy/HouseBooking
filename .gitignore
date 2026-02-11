@@ -1,0 +1,35 @@
+# Python
+__pycache__/
+*.py[cod]
+*.so
+*.egg-info/
+dist/
+build/
+
+# venv
+.venv/
+venv/
+
+# env secrets
+.env
+.env.*
+
+# logs
+*.log
+
+# IDE
+.idea/
+.vscode/
+
+# OS
+.DS_Store
+
+# Alembic cache (не обязательно, но ок)
+*.bak
+
+# Frontend (если есть)
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
