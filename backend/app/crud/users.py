@@ -36,3 +36,7 @@ async def update_user(db: AsyncSession, user: User, data: UserUpdate) -> User:
 async def delete_user(db: AsyncSession, user: User) -> None:
     await db.delete(user)
     await db.commit()
+
+async def get_user_by_email(db: AsyncSession, email: str) -> User | None:
+    res = await db.execute(select(User).where(User.email == email))
+    return res.scalar_one_or_none()
