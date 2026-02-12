@@ -1,17 +1,17 @@
 <template>
-  <div class="authPage">
+  <div class="authOverlay" @click.self="$emit('close')">
     <div class="authCard">
+      <button class="authClose" type="button" @click="$emit('close')">×</button>
+
       <template v-if="mode === 'login'">
         <section class="authSection">
           <h2 class="authTitle">Ваш email</h2>
           <p class="authSub">Укажите ваши персональные данные</p>
-
           <input
-            id="login-email"
             v-model="loginForm.email"
             class="authInput"
             type="email"
-            placeholder="gogo123"
+            placeholder="example@mail.com"
           />
         </section>
 
@@ -23,7 +23,6 @@
 
           <div class="passwordWrap">
             <input
-              id="login-password"
               v-model="loginForm.password"
               class="authInput"
               :type="showPassword ? 'text' : 'password'"
@@ -55,7 +54,7 @@
             v-model="registerForm.name"
             class="authInput"
             type="text"
-            placeholder="gogo123"
+            placeholder="Ваше имя"
           />
         </section>
 
@@ -106,27 +105,17 @@
 
 <script setup>
 import { reactive, ref } from "vue";
-import { useRouter } from "vue-router";
 import { login, register } from "../api/auth";
 
-const router = useRouter();
+const emit = defineEmits(["close", "authenticated"]);
 
 const mode = ref("login");
 const loading = ref(false);
 const error = ref("");
 const showPassword = ref(false);
 
-const loginForm = reactive({
-  email: "",
-  password: "",
-});
-
-const registerForm = reactive({
-  name: "",
-  email: "",
-  phone: "",
-  password: "",
-});
+const loginForm = reactive({ email: "", password: "" });
+const registerForm = reactive({ name: "", email: "", phone: "", password: "" });
 
 function switchMode(nextMode) {
   mode.value = nextMode;
@@ -139,7 +128,8 @@ async function submitLogin() {
   try {
     const data = await login(loginForm.email, loginForm.password);
     localStorage.setItem("token", data.access_token);
-    router.push("/");
+    emit("authenticated");
+    emit("close");
   } catch (e) {
     error.value = e?.response?.data?.detail || "Ошибка входа";
   } finally {
@@ -158,7 +148,8 @@ async function submitRegister() {
       password: registerForm.password,
     });
     localStorage.setItem("token", data.access_token);
-    router.push("/");
+    emit("authenticated");
+    emit("close");
   } catch (e) {
     error.value = e?.response?.data?.detail || "Ошибка регистрации";
   } finally {
@@ -168,66 +159,65 @@ async function submitRegister() {
 </script>
 
 <style scoped>
-.authPage {
-  min-height: 100vh;
-  background: #f4f7fb;
-  padding: 28px;
+.authOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(18, 24, 33, 0.45);
   display: grid;
   place-items: center;
+  z-index: 30;
+  padding: 16px;
 }
-
 .authCard {
+  position: relative;
   width: min(780px, 100%);
+  max-height: calc(100vh - 32px);
+  overflow: auto;
   background: #f3f6fb;
   border-radius: 22px;
   border: 1px solid #e1e8f2;
   padding: 42px;
 }
-
-.authSection {
-  margin-bottom: 10px;
+.authClose {
+  position: absolute;
+  right: 14px;
+  top: 10px;
+  border: none;
+  background: transparent;
+  font-size: 30px;
+  cursor: pointer;
+  color: #5f7184;
 }
-
-.authSection_compact {
-  display: grid;
-  gap: 10px;
-}
-
+.authSection { margin-bottom: 10px; }
+.authSection_compact { display: grid; gap: 10px; }
 .authTitle {
   margin: 0 0 8px;
   color: #25394d;
-  font-size: 56px;
+  font-size: 40px;
   font-weight: 500;
   line-height: 1.03;
 }
-
 .authSub {
   margin: 0 0 16px;
   color: #bcc4df;
-  font-size: 31px;
+  font-size: 20px;
 }
-
 .authInput {
   width: 100%;
   min-height: 56px;
   padding: 0 20px;
   border-radius: 999px;
   border: 1px solid #dce4ee;
-  background: #ffffff;
+  background: #fff;
   color: #24384c;
-  font-size: 39px;
+  font-size: 24px;
 }
-
 .authDivider {
   border: none;
   border-top: 1px solid #dce4ee;
   margin: 22px 0;
 }
-
-.passwordWrap {
-  position: relative;
-}
-
+.passwordWrap { position: relative; }
 .eyeBtn {
   position: absolute;
   right: 14px;
@@ -236,9 +226,7 @@ async function submitRegister() {
   border: none;
   background: transparent;
   cursor: pointer;
-  font-size: 20px;
 }
-
 .submitBtn {
   margin-top: 22px;
   width: 100%;
@@ -247,17 +235,15 @@ async function submitRegister() {
   border-radius: 999px;
   background: #7fa673;
   color: #f6f8ff;
-  font-size: 26px;
+  font-size: 24px;
   cursor: pointer;
 }
-
 .switchText {
   margin: 16px 0 0;
   text-align: center;
   color: #b9bfd5;
-  font-size: 31px;
+  font-size: 22px;
 }
-
 .switchBtn {
   border: none;
   background: transparent;
@@ -265,34 +251,9 @@ async function submitRegister() {
   cursor: pointer;
   font-size: inherit;
 }
-
 .formError {
   margin-top: 14px;
   text-align: center;
   color: #d13a4e;
-  font-size: 18px;
-}
-
-@media (max-width: 900px) {
-  .authCard {
-    padding: 24px;
-  }
-
-  .authTitle {
-    font-size: 38px;
-  }
-
-  .authSub,
-  .switchText {
-    font-size: 20px;
-  }
-
-  .authInput {
-    font-size: 24px;
-  }
-
-  .submitBtn {
-    font-size: 20px;
-  }
 }
 </style>

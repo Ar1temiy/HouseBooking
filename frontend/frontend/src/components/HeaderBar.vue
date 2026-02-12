@@ -6,18 +6,45 @@
           <img class="brand__logo" :src="logoSrc" alt="logo" />
         </div>
 
-        <router-link class="cabinetBtn" to="/login">
+        <button v-if="!isAuthenticated" class="cabinetBtn" type="button" @click="isAuthOpen = true">
           <img class="cabinetBtn__icon" :src="userIcon" alt="" />
           Вход в кабинет
+        </button>
+
+        <router-link v-else class="cabinetBtn" to="/bookings">
+          <img class="cabinetBtn__icon" :src="userIcon" alt="" />
+          Личный кабинет
         </router-link>
       </div>
     </div>
   </header>
+
+  <AuthModal
+    v-if="isAuthOpen"
+    @close="isAuthOpen = false"
+    @authenticated="onAuthenticated"
+  />
 </template>
 
 <script setup>
+import { ref } from "vue";
+import { useRouter } from "vue-router";
 import logoSrc from "../assets/logo.svg";
 import userIcon from "../assets/icons/user.svg";
+import AuthModal from "./AuthModal.vue";
+
+const router = useRouter();
+const isAuthOpen = ref(false);
+const isAuthenticated = ref(Boolean(localStorage.getItem("token")));
+
+function onAuthenticated() {
+  isAuthenticated.value = true;
+  router.push("/");
+}
+
+window.addEventListener("storage", () => {
+  isAuthenticated.value = Boolean(localStorage.getItem("token"));
+});
 </script>
 
 <style scoped>
@@ -31,7 +58,6 @@ import userIcon from "../assets/icons/user.svg";
   padding: 14px 18px;
   border-radius: 22px;
 
-  /* вот эта подложка как в макете */
   background: rgba(255,255,255,0.85);
   border: 1px solid #e7eef5;
   box-shadow: 0 10px 30px rgba(15, 23, 42, 0.06);
@@ -50,7 +76,6 @@ import userIcon from "../assets/icons/user.svg";
   display:block;
 }
 
-/* кнопка справа */
 .cabinetBtn{
   display:inline-flex;
   align-items:center;
@@ -63,6 +88,7 @@ import userIcon from "../assets/icons/user.svg";
   color: #1e2a33;
   text-decoration:none;
   font-size: 13px;
+  cursor: pointer;
 }
 
 .cabinetBtn__icon{
