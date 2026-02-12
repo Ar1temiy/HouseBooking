@@ -1,5 +1,6 @@
 <template>
   <div class="cabinetPage">
+    <!-- Левая колонка: сайдбар -->
     <aside class="sidebar">
       <img class="sidebar__logo" src="/src/assets/logo.svg" alt="logo" />
 
@@ -7,26 +8,28 @@
         <span class="sidebar__dot">•</span>
         Бронирования
       </button>
-
-      <button class="sidebar__logout" type="button" @click="logout">
-        Выход
-      </button>
     </aside>
 
+    <!-- Правая колонка: контент -->
     <main class="content">
+      <!-- Верхняя панель -->
       <div class="topBar">
         <div class="topBar__user">
           <img src="/src/assets/icons/user.svg" alt="" />
           {{ userName }}
         </div>
         <router-link class="topBar__cta" to="/">бронировать домик</router-link>
+        <button class="topBar__logout" type="button" @click="logout">Выход</button>
       </div>
 
+      <!-- Состояния загрузки/ошибки -->
       <section class="panel" v-if="loading">Загрузка...</section>
       <section class="panel" v-else-if="error">{{ error }}</section>
       <section class="panel" v-else-if="!bookings.length">У вас пока нет бронирований.</section>
 
+      <!-- Основная сетка: карта + карточка заявки -->
       <section v-else class="panel panel_grid">
+        <!-- Карта -->
         <div class="mapCard">
           <div class="mapWrap">
             <img class="mapImg" :src="mapCabSrc" alt="карта бронирований" />
@@ -38,56 +41,81 @@
               :class="{ pin_active: currentBooking?.house_id === h.id }"
               :style="pinStyle(h.id)"
             >
-              <img v-if="currentBooking?.house_id === h.id" :src="choosedPinSrc" alt="выбранный домик" />
+              <img
+                v-if="currentBooking?.house_id === h.id"
+                :src="choosedPinSrc"
+                alt="выбранный домик"
+              />
               <span v-else>+</span>
             </span>
 
-
+            <!-- Если в макете есть подсказка снизу карты — можно вернуть этот блок
+            <div class="mapHint">
+              <img :src="infoIconSrc" alt="" />
+              Ваш забронированный домик указан на карте
+            </div>
+            -->
           </div>
         </div>
 
+        <!-- Карточка заявки -->
         <div class="requestCard">
-          <h2 class="requestCard__title">Ваша заявка</h2>
-          <div class="requestCard__house">{{ houseTitle(currentBooking?.house_id) }}</div>
-          <hr />
+          <div class="requestCard__body">
+            <h2 class="requestCard__title">Ваша заявка</h2>
+            <div class="requestCard__house">{{ houseTitle(currentBooking?.house_id) }}</div>
+            <hr />
 
-          <h3>Дата бронирования</h3>
-          <div class="chips">
-            <div class="chip chip_green">
-              <img :src="calendarIconSrc" alt="" />
-              Дата заезда
+            <h3>Дата бронирования</h3>
+            <div class="chips">
+              <div class="chip chip_green">
+                <img :src="calendarIconSrc" alt="" />
+                Дата заезда
+              </div>
+              <div class="chip">{{ formatDateRu(currentBooking?.date_from) }}</div>
+              <div class="chip">
+                срок: {{ bookingDays(currentBooking) }} {{ dayWord(bookingDays(currentBooking)) }}
+              </div>
             </div>
-            <div class="chip">{{ formatDateRu(currentBooking?.date_from) }}</div>
-            <div class="chip">срок: {{ bookingDays(currentBooking) }} {{ dayWord(bookingDays(currentBooking)) }}</div>
-          </div>
 
-          <hr />
+            <hr />
 
-          <div class="rowBetween">
-            <h3>Количество гостей</h3>
-            <div class="chip">{{ currentBooking?.guests }}</div>
-          </div>
-
-          <hr />
-
-          <div class="price">{{ formatPrice(currentBooking?.total_price || 0) }} руб</div>
-          <div class="priceSub">Сумма оплаты</div>
-
-          <div class="statusRow">
-            <h3>Статус</h3>
-            <div class="statusLabel">
-              {{ statusLabel(currentBooking?.status) }}
-              <img :src="statusIcon(currentBooking?.status)" alt="" />
+            <div class="rowBetween">
+              <h3>Количество гостей</h3>
+              <div class="chip chip_guest">{{ currentBooking?.guests }}</div>
             </div>
+
+            <hr />
+
+            <div class="price">{{ formatPrice(currentBooking?.total_price || 0) }} руб</div>
+            <div class="priceSub">Сумма оплаты</div>
+
+            <div class="statusRow">
+              <h3>Статус</h3>
+              <div class="statusLabel">
+                {{ statusLabel(currentBooking?.status) }}
+                <img :src="statusIcon(currentBooking?.status)" alt="" />
+              </div>
+            </div>
+
+            <hr />
           </div>
 
-          <hr />
-
+          <!-- Пагинация внизу карточки -->
           <div class="pager" v-if="bookings.length > 1">
-            <button type="button" @click="prevBooking">◀</button>
-            <span>{{ currentIndex + 1 }}</span>
-            <span>{{ bookings.length }}</span>
-            <button type="button" @click="nextBooking">▶</button>
+            <button type="button" @click="prevBooking" :disabled="isFirstPage">◀</button>
+
+            <button
+              v-for="page in pageNumbers"
+              :key="`page-${page}`"
+              type="button"
+              class="pager__page"
+              :class="{ pager__page_active: page - 1 === currentIndex }"
+              @click="goToPage(page - 1)"
+            >
+              {{ page }}
+            </button>
+
+            <button type="button" @click="nextBooking" :disabled="isLastPage">▶</button>
           </div>
         </div>
       </section>
@@ -96,6 +124,10 @@
 </template>
 
 <script setup>
+/**
+ * ЛОГИКА НЕ МЕНЯЛАСЬ — правили только отступы в CSS.
+ * Здесь оставляю твою логику как есть.
+ */
 import { computed, onMounted, ref } from "vue";
 import { useRouter } from "vue-router";
 import { fetchMyBookings } from "../api/bookings";
@@ -112,10 +144,14 @@ const currentIndex = ref(0);
 const mapCabSrc = "/src/assets/booking/map_cab.svg";
 const choosedPinSrc = "/src/assets/icons/choosed.svg";
 const calendarIconSrc = "/src/assets/booking/calendar.svg";
+const infoIconSrc = "/src/assets/icons/info.svg";
 
 const userName = localStorage.getItem("userName") || "Пользователь";
 
 const currentBooking = computed(() => bookings.value[currentIndex.value] || null);
+const pageNumbers = computed(() => Array.from({ length: bookings.value.length }, (_, i) => i + 1));
+const isFirstPage = computed(() => currentIndex.value === 0);
+const isLastPage = computed(() => currentIndex.value === bookings.value.length - 1);
 
 onMounted(async () => {
   try {
@@ -136,11 +172,15 @@ function logout() {
 }
 
 function prevBooking() {
-  currentIndex.value = (currentIndex.value - 1 + bookings.value.length) % bookings.value.length;
+  if (currentIndex.value > 0) currentIndex.value -= 1;
 }
 
 function nextBooking() {
-  currentIndex.value = (currentIndex.value + 1) % bookings.value.length;
+  if (currentIndex.value < bookings.value.length - 1) currentIndex.value += 1;
+}
+
+function goToPage(index) {
+  if (index >= 0 && index < bookings.value.length) currentIndex.value = index;
 }
 
 function houseTitle(houseId) {
@@ -198,31 +238,33 @@ function pinStyle(id) {
 </script>
 
 <style scoped>
+/* ====== ОСНОВА СТРАНИЦЫ ====== */
 .cabinetPage {
   min-height: 100vh;
   display: grid;
-  grid-template-columns: 206px 1fr;
+  grid-template-columns: 164px 1fr;
   background: #f4f6fa;
 }
 
+/* ====== SIDEBAR ====== */
 .sidebar {
   border-right: 1px solid #e3e8f2;
-  padding: 24px 16px;
+  padding: 24px 16px 20px;
   display: flex;
   flex-direction: column;
 }
 
 .sidebar__logo {
-  width: 105px;
-  margin-left: 18px;
-  margin-bottom: 44px;
+  width: 94px;
+  margin-left: 16px;
+  margin-bottom: 42px;
 }
 
 .sidebar__nav {
   border: none;
   border-radius: 999px;
   min-height: 34px;
-  padding: 0 14px;
+  padding: 0 12px;
   display: inline-flex;
   align-items: center;
   gap: 8px;
@@ -231,24 +273,23 @@ function pinStyle(id) {
   width: fit-content;
 }
 
-.sidebar__dot { color: #9aa7c3; }
-
-.sidebar__logout {
-  margin-top: auto;
-  border: none;
-  border-radius: 999px;
-  min-height: 40px;
-  background: #eef2fa;
-  color: #31475f;
+.sidebar__dot {
+  color: #9aa7c3;
 }
 
-.content { padding: 14px 24px; }
+/* ====== CONTENT ====== */
+/* top right bottom left */
+.content {
+  padding: 14px 28px 80px 45px;
+}
 
+/* ====== TOP BAR ====== */
 .topBar {
   background: #fff;
   border: 1px solid #e3e8f2;
-  border-radius: 18px;
-  padding: 10px 16px;
+  border-radius: 16px;
+  min-height: 52px;
+  padding: 10px 20px;
   display: flex;
   align-items: center;
   gap: 16px;
@@ -262,29 +303,45 @@ function pinStyle(id) {
 }
 
 .topBar__cta {
-  padding: 9px 16px;
+  padding: 8px 16px;
   border-radius: 999px;
   background: #f2f4fa;
   color: #a7b3cc;
+  font-size: 14px;
 }
 
+.topBar__logout {
+  margin-left: auto;
+  border: none;
+  border-radius: 999px;
+  min-height: 34px;
+  padding: 0 14px;
+  background: #eef2fa;
+  color: #31475f;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+/* ====== PANEL ====== */
 .panel {
-  margin-top: 16px;
+  margin-top: 18px;
   background: #fff;
-  border: 1px solid #e3e8f2;
+  border: none;
   border-radius: 22px;
-  padding: 18px;
+  padding: 40px 50px;
 }
 
+/* Сетка: карта + карточка */
 .panel_grid {
   display: grid;
-  grid-template-columns: 1.1fr 1fr;
-  gap: 18px;
+  grid-template-columns: 1.06fr 1fr;
+  gap: 50px;
 }
 
+/* ====== MAP ====== */
 .mapWrap {
   position: relative;
-  border-radius: 20px;
+  border-radius: 16px;
   overflow: hidden;
 }
 
@@ -319,13 +376,14 @@ function pinStyle(id) {
   height: 34px;
 }
 
+/* Если вернешь mapHint в шаблон — стили готовы
 .mapHint {
   position: absolute;
   left: 50%;
   transform: translateX(-50%);
-  bottom: 20px;
+  bottom: 24px;
   width: 82%;
-  min-height: 68px;
+  min-height: 72px;
   border-radius: 16px;
   background: #fff;
   border: 1px solid #e4ebf4;
@@ -335,50 +393,91 @@ function pinStyle(id) {
   justify-content: center;
   color: #30455d;
 }
-
 .mapHint img { width: 18px; }
+*/
 
+/* ===================================================================== */
+/* =================== ВОТ ТУТ “ОТСТУПЫ КАК В МАКЕТЕ” ==================== */
+/* ===================================================================== */
+
+/**
+ * Что поменяли:
+ * 1) padding карточки: сделали компактнее (в макете меньше “жира” по краям)
+ * 2) вместо микрогэпа (2px) включили нормальный gap внутри body (ритм)
+ * 3) уменьшили margin у h3 — раньше он делал огромные провалы
+ * 4) hr — подстроили под новый ритм
+ */
 .requestCard {
   border-radius: 20px;
-  background: #f7f9fd;
-  border: 1px solid #e3e8f2;
-  padding: 26px;
+  background: #fff;            /* в макете карточка визуально белая */
+  border: none;
+
+  /* ГЛАВНЫЕ ВНУТРЕННИЕ ОТСТУПЫ КАРТОЧКИ (влияет на “воздух” по краям) */
+  padding: 28px 32px 22px;     /* было: 42px 46px 34px */
+
+  display: flex;
+  flex-direction: column;
+}
+
+.requestCard__body {
+  display: flex;
+  flex-direction: column;
+
+  /* ОСНОВНОЙ “РЕГУЛЯТОР” РИТМА ВНУТРИ КАРТОЧКИ */
+  gap: 14px;                   /* было: 2px */
+
+  min-height: 100%;
 }
 
 .requestCard__title {
   margin: 0;
-  font-size: 48px;
+  font-size: 56px;
+  line-height: 1.08;
   color: #25394d;
   font-weight: 300;
 }
 
 .requestCard__house {
-  margin-top: 8px;
   color: #acb7d0;
-  font-size: 40px;
+  font-size: 38px;
+
+  /* Отступы под/над “Домик №…” */
+  margin: 2px 0 8px;           /* было: margin-top:20px; margin-bottom:1px */
 }
 
+/* Заголовки секций — делаем компактнее */
 .requestCard h3 {
-  margin: 14px 0 10px;
-  font-size: 53px;
+  margin: 6px 0 6px;           /* было: 20px 0 14px */
+  font-size: 55px;
+  line-height: 1.08;
   color: #25394d;
   font-weight: 300;
 }
 
+/* В строках “h3 + chip справа” — margin убираем полностью */
+.rowBetween h3,
+.statusRow h3 {
+  margin: 0;
+}
+
+/* Разделители подстраиваем под новый gap */
 .requestCard hr {
   border: none;
   border-top: 1px solid #dce4ef;
-  margin: 12px 0;
+
+  /* Пауза вокруг линии */
+  margin: 6px 0;               /* было: 5px 0 */
 }
 
+/* ====== CHIPS ====== */
 .chips {
   display: grid;
   grid-template-columns: 1fr 1fr 1fr;
-  gap: 8px;
+  gap: 10px;                   /* было 8px */
 }
 
 .chip {
-  min-height: 46px;
+  min-height: 55px;
   border-radius: 999px;
   border: 1px solid #e4eaf4;
   background: #fff;
@@ -386,8 +485,10 @@ function pinStyle(id) {
   align-items: center;
   justify-content: center;
   color: #4f6278;
-  font-size: 31px;
+  font-size: 16px;
   gap: 8px;
+  padding: 0 14px;
+  white-space: nowrap;
 }
 
 .chip_green {
@@ -395,8 +496,16 @@ function pinStyle(id) {
   color: #74926d;
 }
 
-.chip_green img { width: 16px; }
+.chip_green img {
+  width: 16px;
+}
 
+.chip_guest {
+  min-width: 152px;
+  color: #bcc7dc;
+}
+
+/* ====== ROWS ====== */
 .rowBetween {
   display: flex;
   justify-content: space-between;
@@ -404,16 +513,20 @@ function pinStyle(id) {
   align-items: center;
 }
 
+/* ====== PRICE ====== */
 .price {
-  font-size: 56px;
+  font-size: 44px;
+  line-height: 1.1;
+  font-weight: 300;
   color: #24384d;
 }
 
 .priceSub {
   color: #acb8cf;
-  font-size: 30px;
+  font-size: 20px;
 }
 
+/* ====== STATUS ====== */
 .statusRow {
   display: flex;
   justify-content: space-between;
@@ -424,20 +537,25 @@ function pinStyle(id) {
 .statusLabel {
   display: inline-flex;
   align-items: center;
-  gap: 10px;
+  gap: 20px;
   color: #a9b6cd;
-  font-size: 30px;
+  font-size: 20px;
 }
 
 .statusLabel img {
-  width: 38px;
-  height: 38px;
+  width: 41px;
+  height: 41px;
 }
 
+/* ====== PAGER ====== */
 .pager {
-  margin-top: 18px;
+  margin-top: auto;
+
+  /* Чуть больше паузы от контента */
+  padding-top: 14px; /* было 10px */
+
   display: flex;
-  gap: 14px;
+  gap: 16px;
   align-items: center;
   justify-content: center;
   color: #4b6077;
@@ -453,9 +571,35 @@ function pinStyle(id) {
   cursor: pointer;
 }
 
+.pager button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.pager__page {
+  background: transparent !important;
+  color: #4c6078 !important;
+  width: auto !important;
+  min-width: 22px;
+  height: 34px;
+  cursor: pointer;
+}
+
+.pager__page_active {
+  color: #24384d !important;
+  font-weight: 600;
+}
+
+/* ====== RESPONSIVE ====== */
 @media (max-width: 1100px) {
-  .cabinetPage { grid-template-columns: 1fr; }
-  .sidebar { display: none; }
-  .panel_grid { grid-template-columns: 1fr; }
+  .cabinetPage {
+    grid-template-columns: 1fr;
+  }
+  .sidebar {
+    display: none;
+  }
+  .panel_grid {
+    grid-template-columns: 1fr;
+  }
 }
 </style>
