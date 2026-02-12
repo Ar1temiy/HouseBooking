@@ -11,7 +11,7 @@
 
 ## 🎬 Screenshot / Demo
 
-![Screenshot](docs/screenshot.png)
+![Screenshot](docs/demoapi.png)
 
 🔗 **Live Demo:** [https://your-demo-link.example.com](https://your-demo-link.example.com)
 
