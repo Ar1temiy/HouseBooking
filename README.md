@@ -13,7 +13,7 @@
 
 ![Screenshot](docs/demoapi.png)
 
-🔗 **Live Demo:** [https://your-demo-link.example.com](https://your-demo-link.example.com)
+🔗 **Live Demo:**(docs/demovideo.mp4)
 
 > Добавьте актуальный GIF или скриншот интерфейса в `docs/screenshot.png`, чтобы сразу показать UX проекта новым пользователям.
 
