@@ -29,7 +29,7 @@
               placeholder="••••••••"
             />
             <button class="eyeBtn" type="button" @click="showPassword = !showPassword">
-              👁
+              <img :src="eyeIcon" alt="показать пароль" />
             </button>
           </div>
         </section>
@@ -105,6 +105,7 @@
 
 <script setup>
 import { reactive, ref } from "vue";
+import eyeIcon from "../assets/icons/eye.svg";
 import { login, register } from "../api/auth";
 
 const emit = defineEmits(["close", "authenticated"]);
@@ -212,6 +213,16 @@ async function submitRegister() {
   color: #24384c;
   font-size: 24px;
 }
+
+.authInput:-webkit-autofill,
+.authInput:-webkit-autofill:hover,
+.authInput:-webkit-autofill:focus,
+.authInput:-webkit-autofill:active {
+  -webkit-text-fill-color: #24384c;
+  -webkit-box-shadow: 0 0 0px 1000px #ffffff inset;
+  box-shadow: 0 0 0px 1000px #ffffff inset;
+  transition: background-color 9999s ease-in-out 0s;
+}
 .authDivider {
   border: none;
   border-top: 1px solid #dce4ee;
@@ -226,6 +237,14 @@ async function submitRegister() {
   border: none;
   background: transparent;
   cursor: pointer;
+  display: grid;
+  place-items: center;
+}
+
+.eyeBtn img {
+  width: 20px;
+  height: 14px;
+  display: block;
 }
 .submitBtn {
   margin-top: 22px;

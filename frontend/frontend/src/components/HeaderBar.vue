@@ -11,10 +11,16 @@
           Вход в кабинет
         </button>
 
-        <router-link v-else class="cabinetBtn" to="/bookings">
-          <img class="cabinetBtn__icon" :src="userIcon" alt="" />
-          Личный кабинет
-        </router-link>
+        <div v-else class="cabinetActions">
+          <button class="logoutBtn" type="button" @click="logout">
+            Выйти
+          </button>
+
+          <router-link class="cabinetBtn" to="/bookings">
+            <img class="cabinetBtn__icon" :src="userIcon" alt="" />
+            Личный кабинет
+          </router-link>
+        </div>
       </div>
     </div>
   </header>
@@ -39,6 +45,12 @@ const isAuthenticated = ref(Boolean(localStorage.getItem("token")));
 
 function onAuthenticated() {
   isAuthenticated.value = true;
+  router.push("/");
+}
+
+function logout() {
+  localStorage.removeItem("token");
+  isAuthenticated.value = false;
   router.push("/");
 }
 
@@ -95,5 +107,19 @@ window.addEventListener("storage", () => {
   width: 18px;
   height: 18px;
   opacity: .75;
+}
+
+.cabinetActions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.logoutBtn {
+  border: none;
+  background: transparent;
+  color: #6f8296;
+  font-size: 13px;
+  cursor: pointer;
 }
 </style>

@@ -30,7 +30,7 @@
               placeholder="••••••••"
             />
             <button class="eyeBtn" type="button" @click="showPassword = !showPassword">
-              👁
+              <img :src="eyeIcon" alt="показать пароль" />
             </button>
           </div>
         </section>
@@ -106,6 +106,7 @@
 
 <script setup>
 import { reactive, ref } from "vue";
+import eyeIcon from "../assets/icons/eye.svg";
 import { useRouter } from "vue-router";
 import { login, register } from "../api/auth";
 
