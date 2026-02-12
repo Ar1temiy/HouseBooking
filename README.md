@@ -9,15 +9,10 @@
 
 ---
 
-## 🎬 Screenshot / Demo
+## 🎬 Demo
 
+[![Demo](docs/demovideo.gif)](docs/demovideo.mp4)
 ![Screenshot](docs/demoapi.png)
-
-🔗 **Live Demo:**(docs/demovideo.mp4)
-
-> Добавьте актуальный GIF или скриншот интерфейса в `docs/screenshot.png`, чтобы сразу показать UX проекта новым пользователям.
-
----
 
 ## 📖 Overview
 
