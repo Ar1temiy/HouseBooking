@@ -14,11 +14,6 @@
           а с вас — только хорошее настроение! Продолжительность мероприятия
           зависит только от вас.
         </p>
-
-        <button class="promo__btn" type="button">
-          на главную
-        </button>
-
         <div class="promo__footer">
           <div class="promo__social">
             <a class="promo__socBtn" href="#" aria-label="VK">

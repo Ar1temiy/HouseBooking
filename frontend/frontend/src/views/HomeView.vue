@@ -12,8 +12,13 @@
 
       <PromoCard />
 
-      <!-- ниже позже будет BookingSection -->
-      <div ref="bookingEl" style="height: 1px;"></div>
+      <div ref="bookingEl"></div>
+
+      <BookingSection
+        :houses="houses"
+        :selectedHouseId="selectedHouseId"
+        @select-house="selectHouse"
+      />
     </main>
   </div>
 </template>
@@ -23,6 +28,7 @@ import { ref, onMounted } from "vue";
 import HeaderBar from "../components/HeaderBar.vue";
 import ChooseHouseSection from "../components/ChooseHouseSection.vue";
 import PromoCard from "../components/PromoCard.vue";
+import BookingSection from "../components/BookingSection.vue";
 import { fetchHouses } from "../api/houses";
 
 const houses = ref([]);
@@ -58,4 +64,3 @@ function goBooking(id) {
   gap: 18px; /* расстояние между блоками */
 }
 </style>
-

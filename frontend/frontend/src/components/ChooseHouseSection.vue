@@ -2,7 +2,6 @@
   <section class="choose">
     <div class="choose__top">
       <h1 class="choose__title">Выберите домик</h1>
-
       <div class="choose__hint">
         <div class="choose__hintIcon">i</div>
         <div class="choose__hintText">
@@ -89,10 +88,10 @@ function pinStyle(id) {
 }
 
 .choose__title {
-  margin: 0;
+  margin: 20;
   font-size: 54px;
   line-height: 1.05;
-  font-weight: 600;
+  font-weight: 400;
   letter-spacing: -0.02em;
 }
 
@@ -133,7 +132,7 @@ function pinStyle(id) {
   border-radius: 22px;
   background: rgba(255, 255, 255, 0.85);
   border: 1px solid #e7eef5;
-  padding: 16px;
+  padding: 0px;
 }
 
 .choose__mapWrap {
