@@ -17,12 +17,23 @@ from app.crud.houses import (get_houses, get_house_by_id, create_house, update_h
 router = APIRouter(prefix="/houses", tags=["houses"])
 # -------- PUBLIC (доступно всем) --------
 
-@router.get("", response_model=list[HouseRead])
+@router.get(
+    "",
+    response_model=list[HouseRead],
+    summary="Список домов",
+    description="Возвращает список всех доступных домов.",
+)
 async def list_houses(db: AsyncSession = Depends(get_db)):
     return await get_houses(db)
 
 
-@router.get("/{house_id}", response_model=HouseRead)
+@router.get(
+    "/{house_id}",
+    response_model=HouseRead,
+    summary="Дом по ID",
+    description="Возвращает информацию о конкретном доме.",
+    responses={404: {"description": "Дом не найден"}},
+)
 async def get_house(house_id: int, db: AsyncSession = Depends(get_db)):
     house = await get_house_by_id(db, house_id)
     if not house:
@@ -32,12 +43,25 @@ async def get_house(house_id: int, db: AsyncSession = Depends(get_db)):
 
 # -------- ADMIN ONLY --------
 
-@router.post("", response_model=HouseRead, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "",
+    response_model=HouseRead,
+    status_code=status.HTTP_201_CREATED,
+    summary="Создать дом (admin)",
+    description="Создаёт новый дом. Доступно только администратору.",
+    responses={403: {"description": "Только для администратора"}},
+)
 async def create_house_endpoint(payload: HouseCreate, db: AsyncSession = Depends(get_db), admin: User = Depends(require_admin)):
     return await create_house(db, payload)
 
 
-@router.patch("/{house_id}", response_model=HouseRead)
+@router.patch(
+    "/{house_id}",
+    response_model=HouseRead,
+    summary="Обновить дом (admin)",
+    description="Частично обновляет данные дома. Доступно только администратору.",
+    responses={403: {"description": "Только для администратора"}, 404: {"description": "Дом не найден"}},
+)
 async def update_house_endpoint(
     house_id: int,
     payload: HouseUpdate,
@@ -49,7 +73,13 @@ async def update_house_endpoint(
         raise NotFoundError("House not found")
     return await update_house(db, house, payload)
 
-@router.get("/{house_id}/availability", response_model=list[BusyRange])
+@router.get(
+    "/{house_id}/availability",
+    response_model=list[BusyRange],
+    summary="Занятые интервалы дома",
+    description="Возвращает интервалы занятости дома в диапазоне `[date_from, date_to)`.",
+    responses={400: {"description": "Некорректный диапазон дат"}, 404: {"description": "Дом не найден"}},
+)
 async def house_availability(
     house_id: int,
     date_from: date = Query(..., description="Start date (inclusive)"),
@@ -69,7 +99,13 @@ async def house_availability(
     bookings = await get_house_busy_ranges(db, house_id, date_from, date_to)
     return [BusyRange(date_from=b.date_from, date_to=b.date_to) for b in bookings]
 
-@router.delete("/{house_id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete(
+    "/{house_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    summary="Удалить дом (admin)",
+    description="Удаляет дом. Если есть связанные бронирования — возвращает ошибку.",
+    responses={403: {"description": "Только для администратора"}, 404: {"description": "Дом не найден"}, 409: {"description": "Есть связанные бронирования"}},
+)
 async def delete_house_endpoint(
     house_id: int,
     db: AsyncSession = Depends(get_db),

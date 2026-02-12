@@ -12,7 +12,14 @@ from app.core.security import hash_password, verify_password, create_access_toke
 router = APIRouter(prefix="/auth", tags=["auth"])
 
 
-@router.post("/register", response_model=TokenResponse, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/register",
+    response_model=TokenResponse,
+    status_code=status.HTTP_201_CREATED,
+    summary="Регистрация нового пользователя",
+    description="Создаёт пользователя с ролью `client` и возвращает JWT access token.",
+    responses={409: {"description": "Email уже зарегистрирован"}},
+)
 async def register(payload: RegisterRequest, db: AsyncSession = Depends(get_db)):
     existing = await get_user_by_email(db, payload.email)
     if existing:
@@ -34,7 +41,16 @@ async def register(payload: RegisterRequest, db: AsyncSession = Depends(get_db))
     return TokenResponse(access_token=token)
 
 
-@router.post("/login", response_model=TokenResponse)
+@router.post(
+    "/login",
+    response_model=TokenResponse,
+    summary="Авторизация пользователя",
+    description=(
+        "Проверяет email/пароль и возвращает JWT access token. "
+        "В поле `username` формы передаётся email."
+    ),
+    responses={400: {"description": "Неверный email или пароль"}},
+)
 async def login(
     form: OAuth2PasswordRequestForm = Depends(),
     db: AsyncSession = Depends(get_db),

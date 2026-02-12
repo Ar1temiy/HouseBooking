@@ -11,7 +11,13 @@ from app.crud.bookings import (get_user_bookings, get_booking, create_booking, c
 router = APIRouter(prefix="/bookings", tags=["bookings"])
 
 
-@router.get("/me", response_model=list[BookingRead])
+@router.get(
+    "/me",
+    response_model=list[BookingRead],
+    summary="Мои бронирования",
+    description="Возвращает список бронирований текущего пользователя.",
+    responses={401: {"description": "Пользователь не авторизован"}},
+)
 async def my_bookings(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
@@ -19,7 +25,14 @@ async def my_bookings(
     return await get_user_bookings(db, user_id=current_user.id)
 
 
-@router.post("", response_model=BookingRead, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "",
+    response_model=BookingRead,
+    status_code=status.HTTP_201_CREATED,
+    summary="Создать бронирование",
+    description="Создаёт новое бронирование от имени текущего пользователя.",
+    responses={401: {"description": "Пользователь не авторизован"}},
+)
 async def create_booking_endpoint(
     payload: BookingCreate,
     db: AsyncSession = Depends(get_db),
@@ -29,7 +42,13 @@ async def create_booking_endpoint(
 
 
 
-@router.patch("/{booking_id}/cancel", response_model=BookingRead)
+@router.patch(
+    "/{booking_id}/cancel",
+    response_model=BookingRead,
+    summary="Отменить своё бронирование",
+    description="Отменяет бронирование, если оно принадлежит текущему пользователю.",
+    responses={401: {"description": "Пользователь не авторизован"}, 403: {"description": "Бронирование принадлежит другому пользователю"}, 404: {"description": "Бронирование не найдено"}},
+)
 async def cancel_my_booking(
     booking_id: int,
     db: AsyncSession = Depends(get_db),
@@ -52,7 +71,13 @@ async def cancel_my_booking(
 
 # -------------------- ADMIN --------------------
 
-@router.get("/all", response_model=list[BookingRead])
+@router.get(
+    "/all",
+    response_model=list[BookingRead],
+    summary="Все бронирования (admin)",
+    description="Возвращает список всех бронирований. Доступно только администратору.",
+    responses={403: {"description": "Только для администратора"}},
+)
 async def all_bookings(
     db: AsyncSession = Depends(get_db),
     admin: User = Depends(require_admin),
@@ -60,7 +85,13 @@ async def all_bookings(
     return await get_all_bookings(db)
 
 
-@router.patch("/{booking_id}/confirm", response_model=BookingRead)
+@router.patch(
+    "/{booking_id}/confirm",
+    response_model=BookingRead,
+    summary="Подтвердить бронирование (admin)",
+    description="Переводит бронирование в статус `confirmed`. Доступно только администратору.",
+    responses={403: {"description": "Только для администратора"}, 404: {"description": "Бронирование не найдено"}},
+)
 async def confirm_booking(
     booking_id: int,
     db: AsyncSession = Depends(get_db),
@@ -76,7 +107,13 @@ async def confirm_booking(
     return booking
 
 
-@router.patch("/{booking_id}/admin-cancel", response_model=BookingRead)
+@router.patch(
+    "/{booking_id}/admin-cancel",
+    response_model=BookingRead,
+    summary="Отменить бронирование (admin)",
+    description="Отменяет любое бронирование. Доступно только администратору.",
+    responses={403: {"description": "Только для администратора"}, 404: {"description": "Бронирование не найдено"}},
+)
 async def admin_cancel_booking(
     booking_id: int,
     db: AsyncSession = Depends(get_db),
